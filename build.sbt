@@ -1,47 +1,46 @@
-import SonatypeKeys._
-
 name := "ScalaSwingContrib"
 
 organization := "com.github.benhutchison"
 
-version := "1.5"
+version := "1.8"
 
-scalaVersion := "2.11.0"
+scalaVersion := "2.13.1"
 
-sonatypeSettings
-
-profileName := "com.github.benhutchison"
-
-libraryDependencies ++= {
-  val sv = scalaVersion.value
-  if (sv startsWith "2.10")
-    Seq("org.scala-lang" % "scala-swing" % sv)
-  else
-    Seq(
-      "org.scala-lang.modules" %% "scala-swing" % "1.0.1",
-      "org.scala-lang.modules" %% "scala-xml" % "1.0.1"
-    )
-}
+sonatypeProfileName := "com.github.benhutchison"
 
 libraryDependencies ++= Seq(
-  "org.specs2" %% "specs2" % "2.3.11" % "test",
+  "org.scala-lang.modules" %% "scala-swing" % "2.1.1",
+  "org.scala-lang.modules" %% "scala-xml" % "1.2.0",
+
+  "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.2",
+
+  "org.specs2" %% "specs2-core" % "4.8.3" % "test",
+  "org.specs2" %% "specs2-junit" % "4.8.3" % "test",
+
   "junit" % "junit" % "4.7" % "test"
 )
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
 
-crossScalaVersions := Seq("2.10.4", "2.11.0")
+crossScalaVersions := Seq("2.11.12", "2.12.10", "2.13.1")
+
+unmanagedSourceDirectories in Compile += {
+  val sourceDir = (sourceDirectory in Compile).value
+  CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((2, n)) if n >= 13 => sourceDir / "scala-2.13+"
+    case _                       => sourceDir / "scala-2.13-"
+  }
+}
 
 // Following settings taken from: 
 //https://github.com/sbt/sbt.github.com/blob/gen-master/src/jekyll/using_sonatype.md
 
 publishMavenStyle := true
 
-
-publishTo <<= version { (v: String) =>
+publishTo := {
   val nexus = "https://oss.sonatype.org/"
-  if (v.trim.endsWith("SNAPSHOT")) 
-    Some("snapshots" at nexus + "content/repositories/snapshots") 
+  if (isSnapshot.value)
+    Some("snapshots" at nexus + "content/repositories/snapshots")
   else
     Some("releases"  at nexus + "service/local/staging/deploy/maven2")
 }
@@ -53,7 +52,7 @@ publishArtifact in Test := false
 
 pomIncludeRepository := { _ => false }
 
-pomExtra := (
+pomExtra in Global := (
   <url>http://github.com/benhutchison/ScalaSwingContrib</url>
   <licenses>
     <license>
